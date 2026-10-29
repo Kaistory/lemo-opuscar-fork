@@ -62,6 +62,10 @@ All four page tools take `--size WxH` (default `1920x1080`, even numbers) and `-
 | `core/lib.js` | seeded random `mulberry`, `hash`, `vnoise`, `clamp(x,a,b)`, `lerp(a,b,t)`, `seg(t,a,b)` (0→1 between a and b), easing on 0–1 (`ss(t)`, `eio(t)`, `eo(t)`, `ei(t)`, `back(t,s)`, `spring(t,k,z)`), `monotone`/`track` interpolation, envelope `env` |
 | `core/three/post.js` | three.js post: physical depth of field, GTAO, bloom, colour grade, 2× supersampling |
 | `core/post/crt.js` | WebGL2 CRT / VHS pass over a 2D canvas |
+| `core/figure/figure.js` | skeleton for people drawn in code: `solve(pose, build)` → 3D joints, `view(sk, cam)` (yaw, pitch, perspective) → screen joints, `parts` (capsules far to near, for a style to paint), `mannequin` (check figure), reach IK, `balance`, `blend`/`poseTrack`/`mirror`, `walk`/`run`, builds by age ([`figure/README.md`](figure/README.md)) |
+| `core/figure/poses.js` | the pose library: stand, gesture, lean, work, sit, kneel, lie, action |
+| `core/figure/sheet/` | page for `still.mjs`: pose sheets across views, build line-ups, cycles, `balance=1` |
+| `core/figure/pose_ref.py` | finds reference images in a local copy of a pose gallery, to look at only (never copied into a film) |
 | `core/fonts/` | Fredoka, Lilita One, IM Fell English, ZCOOL KuaiLe (OFL, [`fonts/OFL.md`](fonts/OFL.md)) as subsets; ZCOOL holds only ≈ 200 characters |
 | `core/assets/polyhaven/` | CC0 HDRIs and models (`SOURCES.md`) |
 

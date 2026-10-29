@@ -55,7 +55,7 @@ Write `TREATMENT.md` before drawing anything, and before you open the style's `D
 
 ## 5. Prove the look
 
-- **With characters**: draw a model sheet (turnaround, 3–4 expressions, 2–3 key poses, palette) plus two style frames.
+- **With characters**: draw a model sheet (turnaround, 3–4 expressions, 2–3 key poses, palette) plus two style frames. For a cast drawn in code, render the turnaround and key poses on `core/figure/sheet` first (`views=front,diag,side,back`) with a line-up of the cast's ages (`builds=…`), so heights stay true; then paint the same poses in the style.
 - **Without characters**: three style frames from the film, one of them the signature shot.
 
 Render them with the real drawing code, not a mock-up, and check them yourself against the `STYLE.md` before going on.
@@ -99,6 +99,7 @@ Render 6–9 key shots with the real drawing code, tiled into one sheet (`core/r
   - Check shoulders and arms on a large action test sheet (reach, raise, run, kneel) before shooting (TECHNIQUE.md §10).
   - Held props sit **between the palms**, at a depth between the two arms. A hand-over interpolates from one palm to the other. A rolling object turns by distance ÷ radius.
   - Step through key actions at 0.2 s intervals, enlarged.
+  - Check every held key pose for balance (`core/figure/sheet`, `balance=1`): a red centre of mass means the figure would fall.
 - Check every expression at final size, especially eyebrow direction: "worried" and "angry" are one flip apart.
 
 ## 10. The failures we saw most

@@ -1,0 +1,77 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>figure sheet</title>
+<style>html,body{margin:0;background:#f3f0ea;overflow:hidden}canvas{display:block}</style></head>
+<body><canvas id="c"></canvas>
+<script type="module">
+// Pose and proportion sheets from core/figure/figure.js, rendered with the page tools (core/render/still.mjs at t = 0).
+// ?poses=all | stand,contrapposto | cat:sit   ?views=front,diag,side,back,high,low | 30:-20 (yaw:pitch)
+// ?build=man|woman|elder|elderW|teen|child|toddler|chibi   ?builds=man,woman,child (line-up with a head grid)
+// ?cycle=walk|run&n=8 (phases of a cycle)   ?anim=walk|run (render(t) plays the cycle; DUR = 4 s)
+// ?balance=1 (centre of mass over the support: green inside, red outside)   ?file=<module URL> (poses from a film: export POSES)
+import * as F from '../figure.js';
+const q = new URLSearchParams(location.search), cv = document.getElementById('c'), c = cv.getContext('2d');
+const Wd = innerWidth, Ht = innerHeight; cv.width = Wd; cv.height = Ht;
+const VIEWS = { front: [0, 0], diag: [40, 0], side: [90, 0], back: [180, 0], high: [30, 35], low: [25, -25], left: [-90, 0], diagL: [-40, 0] };
+const views = (q.get('views') || 'diag').split(',').map(v => VIEWS[v] ? [v, ...VIEWS[v]] : [v, ...v.split(':').map(Number)]);
+const build = q.get('build') || 'man', showBal = q.get('balance') === '1';
+let POSES = F.POSES;
+if (q.get('file')) POSES = { ...POSES, ...(await import(q.get('file'))).POSES };
+
+// cells: [label, pose, build]
+let cells = [];
+if (q.get('builds')) cells = q.get('builds').split(',').map(b => [b, POSES.stand, b]);
+else if (q.get('cycle')) { const n = +(q.get('n') || 8), f = F[q.get('cycle')]; for (let i = 0; i < n; i++) cells.push([`${q.get('cycle')} ${i}/${n}`, f(i / n * Math.PI * 2), build]); }
+else if (q.get('anim')) cells = [['anim', null, build]];
+else {
+  const ps = q.get('poses') || 'all';
+  const names = ps === 'all' ? Object.keys(POSES) : ps.startsWith('cat:') ? Object.keys(POSES).filter(k => POSES[k].cat === ps.slice(4)) : ps.split(',');
+  cells = names.map(n => [n, POSES[n], build]);
+}
+const lineup = !!q.get('builds');
+const items = []; for (const cl of cells) for (const v of views) items.push({ cl, v });
+const cols = +(q.get('cols') || (views.length > 1 && !lineup ? views.length : Math.min(items.length, Math.ceil(Math.sqrt(items.length * Wd / Ht * .62)))));
+const rows = Math.ceil(items.length / cols), cw = Wd / cols, ch = Ht / rows, lab = Math.min(22, ch * .08);
+
+function bounds(J) { let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (const k in J) { if (k[0] === '_') continue; const p = J[k]; x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]); } return [x0, y0, x1, y1]; }
+const camOf = (v, px) => ({ yaw: v[1], pitch: v[2], px, x: 0, y: 0, persp: v[2] ? 14 : 0 });
+// one scale for the whole sheet (proportions stay comparable): fit the largest figure
+function fitScale(list) {
+  let m = 0;
+  for (const { cl, v } of list) { if (!cl[1]) continue; const sk = F.solve(cl[1], cl[2]), b = bounds(F.view(sk, camOf(v, 1))); m = Math.max(m, (b[2] - b[0] + 1.2) / cw, (b[3] - b[1] + 1.2) / (ch - lab * 1.8)); }
+  return 1 / (m || 1);
+}
+function drawCell(i, { cl, v }, px, t) {
+  const cx = (i % cols) * cw, cy = Math.floor(i / cols) * ch;
+  const pose = cl[1] || F[q.get('anim')](t * Math.PI * 2);
+  const sk = F.solve(pose, cl[2]), b = bounds(F.view(sk, camOf(v, px)));
+  const cam = { ...camOf(v, px), x: cx + cw / 2 - (b[0] + b[2]) / 2, y: cy + ch - lab * 1.6 - b[3] };
+  const J = F.view(sk, cam), pr = P => F.view({ P, B: sk.B }, cam), P = sk.P;
+  const poly = (pts, fill) => { c.beginPath(); pts.forEach((p, k) => k ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.closePath(); c.fillStyle = fill; c.fill(); };
+  // floor shadow under the pelvis
+  const ring = {}; for (let k = 0; k < 24; k++) { const a = k / 24 * Math.PI * 2; ring[k] = [P.pelvis[0] + Math.cos(a) * 1.2, 0, P.pelvis[2] + Math.sin(a) * 1.2]; }
+  const R = pr(ring); poly(Object.keys(ring).map(k => R[k]), 'rgba(60,50,40,.08)');
+  if (lineup) {   // a line every head, from the ground up
+    c.save(); c.strokeStyle = 'rgba(40,30,20,.16)'; c.lineWidth = 1;
+    for (let k = 0; k <= Math.ceil(sk.B.heads); k++) { const y = cam.y - k * px; c.beginPath(); c.moveTo(cx + 8, y); c.lineTo(cx + cw - 8, y); c.stroke(); }
+    c.restore();
+  }
+  F.mannequin(c, sk, J);
+  if (showBal) {
+    const bl = F.balance(sk), M = pr({ com: bl.com, g: [bl.com[0], 0, bl.com[2]], ...Object.fromEntries(bl.support.map((p, k) => ['s' + k, [p[0], 0, p[1]]])) });
+    c.save(); c.globalAlpha = .25; if (bl.support.length > 2) poly(bl.support.map((_, k) => M['s' + k]), bl.inside ? '#2f8f4e' : '#d0352b'); c.globalAlpha = 1;
+    c.strokeStyle = c.fillStyle = bl.inside ? '#2f8f4e' : '#d0352b'; c.lineWidth = 2; c.setLineDash([5, 4]);
+    c.beginPath(); c.moveTo(M.com[0], M.com[1]); c.lineTo(M.g[0], M.g[1]); c.stroke(); c.setLineDash([]);
+    c.beginPath(); c.arc(M.com[0], M.com[1], 5, 0, Math.PI * 2); c.fill(); c.restore();
+  }
+  c.fillStyle = '#4a4038'; c.font = `${lab}px sans-serif`; c.textAlign = 'center';
+  c.fillText(lineup ? `${cl[0]} · ${sk.B.heads} heads` : views.length > 1 && cols === views.length && i % cols ? v[0] : `${cl[0]}${views.length > 1 ? ' · ' + v[0] : ''}`, cx + cw / 2, cy + ch - lab * .5);
+}
+let PX = null;
+window.DUR = 4;
+window.render = t => {
+  c.fillStyle = '#f3f0ea'; c.fillRect(0, 0, Wd, Ht);
+  if (PX == null) PX = q.get('anim') ? Ht * .8 / F.height(build) : fitScale(items);
+  items.forEach((it, i) => drawCell(i, it, PX, t || 0));
+};
+window.render(0); window.READY = true;
+</script></body></html>

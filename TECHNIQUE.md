@@ -139,6 +139,17 @@ Write an original score from the cue map, in the instruments of the style's soun
 - A 2.5D rig (torso, head, limbs solved per frame) is enough for pantomime.
 - Order the shoulder rotation as abduction, then flexion; the reverse order crosses raised arms into an X.
 - Let the shoulder girdle rise and move forward as the arm lifts, and don't outline the part of the arm that overlaps the torso: that line is what makes a joint look like a puppet seam.
+- **Start from `core/figure/`** ([README](core/figure/README.md)): a 3D skeleton with proportions by age, a pose library, any view (turn, high, low), reach IK, ground contact, balance and walk/run cycles. It gives the body's position; the style paints over `parts()` in its own medium. Check poses on the mannequin (`core/figure/sheet`) before painting.
+- Figure checklist, at key poses:
+  - **Proportions** in head units for each age (adult 7–7.5, teen ≈ 6.8, six-year-old ≈ 5.4, toddler ≈ 4, chibi 2.5); a cast keeps its relative heights from shot to shot.
+  - **Line of action**: one clear curve through spine and limbs; a straight vertical body reads as a mannequin.
+  - **Contrapposto**: hips and shoulders tilt opposite ways; the standing foot sits under the pit of the neck, the free knee bends.
+  - **Weight and balance**: the centre of mass sits over what supports it (`balance=1` on the sheet), unless the figure is moving, leaning or held.
+  - **Silhouette**: arms off the body at key moments, so the action reads in solid black.
+  - **Views**: choose front, ¾, side, high or low for a reason. Avoid stiff frontal twins (arms and legs mirrored): give the two sides different angles.
+  - **Hands**: a mitten plus a thumb, the palm turned the way the gesture needs. **Feet**: point where the body goes, plant flat, never slide (`walkSpeed`).
+  - **Overlap**: paint `parts()` in its order, far to near, and shade the far limbs.
+  - **Performance**: pose to pose with `poseTrack` and easing, an anticipation before each big move, a settle after it.
 
 ## 11. Assets, credits and fonts
 
@@ -152,6 +163,7 @@ Fonts: Google Fonts (OFL), self-hosted in the project. The typefaces a `STYLE.md
 
 | If you need… | Look at |
 |---|---|
+| a figure rig, poses, views, balance and walk cycles | `core/figure/` (shared, not a demo) |
 | 2D character animation and lip sync | `styles/scifi-toon/`, `styles/cel-anime-80s/` |
 | a timeline-driven score with cue checking | `styles/microgame/`, `styles/silent-film/` |
 | an image-to-ink redraw and film-damage post pass | `styles/silent-film/demo/engine/` |
